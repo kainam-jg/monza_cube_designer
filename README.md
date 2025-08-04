@@ -18,14 +18,27 @@ pip install -r requirements.txt
 
 ## Running the Server
 
-Start the server with:
+### Option 1: Direct Python execution
 ```bash
 python main.py
 ```
 
-Or using uvicorn directly:
+### Option 2: Using uvicorn directly
 ```bash
 uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+### Option 3: Using the management scripts (Recommended)
+
+```bash
+# Start the server
+./start_server.sh
+
+# Check server status
+./check_server.sh
+
+# Stop the server
+./stop_server.sh
 ```
 
 The server will be available at `http://localhost:8000`
@@ -82,11 +95,14 @@ You can modify the `xml_file_path` to point to any location where you want to st
 
 ```
 monza_cube_designer/
-├── main.py          # FastAPI application
-├── config.json      # Configuration file
-├── Monza.xml        # Sample XML file
-├── requirements.txt  # Python dependencies
-└── README.md        # This file
+├── main.py              # FastAPI application
+├── config.json          # Configuration file
+├── Monza.xml            # Sample XML file
+├── requirements.txt      # Python dependencies
+├── start_server.sh      # Server start script
+├── stop_server.sh       # Server stop script
+├── check_server.sh      # Server status script
+└── README.md            # This file
 ```
 
 ## Notes
@@ -95,4 +111,6 @@ monza_cube_designer/
 - Only XML files are accepted for upload
 - The file must have a `.xml` extension
 - The server validates both content-type and file extension
-- If `config.json` is not found, the server uses `./Monza.xml` as the default path 
+- If `config.json` is not found, the server uses `./Monza.xml` as the default path
+- Server logs are stored in `logs/server.log`
+- PID files are used to track running server processes 

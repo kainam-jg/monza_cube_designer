@@ -26,6 +26,9 @@ fi
 # Create log directory if it doesn't exist
 mkdir -p logs
 
+# Activate virtual environment
+source /opt/tomcat/.venv/bin/activate
+
 # Start the server with nohup
 nohup python main.py > "logs/$LOG_FILE" 2>&1 &
 
