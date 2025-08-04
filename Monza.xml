@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+    <title>Monza XML Data</title>
+    <description>This is the Monza XML file for the FastAPI server</description>
+    <items>
+        <item id="1">
+            <name>Monza Item One</name>
+            <value>100</value>
+        </item>
+        <item id="2">
+            <name>Monza Item Two</name>
+            <value>200</value>
+        </item>
+        <item id="3">
+            <name>Monza Item Three</name>
+            <value>300</value>
+        </item>
+    </items>
+    <metadata>
+        <created>2024-01-01</created>
+        <version>1.0</version>
+        <type>Monza</type>
+    </metadata>
+</root> 
