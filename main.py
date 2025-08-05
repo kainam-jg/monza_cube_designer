@@ -3,6 +3,7 @@ from fastapi.responses import FileResponse
 import os
 import shutil
 import json
+import subprocess
 from pathlib import Path
 
 # Load configuration
@@ -78,6 +79,52 @@ async def replace_xml(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error saving file: {str(e)}")
 
+@app.post("/restart-tomcat", summary="Restart Tomcat Server")
+async def restart_tomcat():
+    """
+    Restart the Tomcat server using systemctl.
+    
+    Returns:
+        Success or error message
+    """
+    try:
+        # Execute the systemctl restart command
+        result = subprocess.run(
+            ["sudo", "systemctl", "restart", "tomcat"],
+            capture_output=True,
+            text=True,
+            timeout=30  # 30 second timeout
+        )
+        
+        if result.returncode == 0:
+            return {
+                "message": "Tomcat server restarted successfully",
+                "status": "success",
+                "stdout": result.stdout.strip() if result.stdout else "",
+                "timestamp": "restart completed"
+            }
+        else:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to restart Tomcat: {result.stderr.strip()}"
+            )
+    
+    except subprocess.TimeoutExpired:
+        raise HTTPException(
+            status_code=500,
+            detail="Tomcat restart timed out after 30 seconds"
+        )
+    except FileNotFoundError:
+        raise HTTPException(
+            status_code=500,
+            detail="systemctl command not found or sudo not available"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error restarting Tomcat: {str(e)}"
+        )
+
 @app.get("/", summary="API Information")
 async def root():
     """
@@ -88,6 +135,7 @@ async def root():
         "endpoints": {
             "GET /xml": "Retrieve the current XML file",
             "POST /xml": "Replace the XML file (upload new XML file)",
+            "POST /restart-tomcat": "Restart Tomcat server",
             "GET /": "This information page"
         }
     }

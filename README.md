@@ -6,6 +6,7 @@ A simple FastAPI server that serves and manages XML files.
 
 - **GET /xml**: Retrieve the current XML file (Monza.xml)
 - **POST /xml**: Replace the XML file with a new one
+- **POST /restart-tomcat**: Restart Tomcat server
 - **GET /**: API information and available endpoints
 - **Configuration**: Loads XML file path from `config.json`
 
@@ -63,6 +64,11 @@ curl -X POST http://localhost:8000/xml \
   -F "file=@your_new_file.xml"
 ```
 
+### Restart Tomcat server
+```bash
+curl -X POST http://35.208.212.1:8000/restart-tomcat
+```
+
 ### Using Python requests
 ```python
 import requests
@@ -76,7 +82,10 @@ with open('new_data.xml', 'rb') as f:
     files = {'file': f}
     response = requests.post('http://localhost:8000/xml', files=files)
     print(response.json())
-```
+
+# Restart Tomcat server
+response = requests.post('http://35.208.212.1:8000/restart-tomcat')
+print(response.json())
 
 ## Configuration
 
