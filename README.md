@@ -4,10 +4,10 @@ A simple FastAPI server that serves and manages XML files.
 
 ## Features
 
-- **GET /xml**: Retrieve the current XML file (Monza.xml)
-- **POST /xml**: Replace the XML file with a new one
-- **POST /restart-tomcat**: Restart Tomcat server
-- **GET /**: API information and available endpoints
+- **GET /monza/admin/xml**: Retrieve the current XML file (Monza.xml)
+- **POST /monza/admin/xml**: Replace the XML file with a new one
+- **POST /monza/admin/restart-tomcat**: Restart Tomcat server
+- **GET /monza/admin**: API information and available endpoints
 - **Configuration**: Loads XML file path from `config.json`
 
 ## Installation
@@ -31,6 +31,7 @@ uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
 ### Option 3: Using the management scripts (Recommended)
 
+#### Linux/macOS:
 ```bash
 # Start the server
 ./start_server.sh
@@ -42,31 +43,43 @@ uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ./stop_server.sh
 ```
 
-The server will be available at `http://localhost:8000`
+#### Windows:
+```cmd
+# Start the server
+start_server.bat
+
+# Check server status
+check_server.bat
+
+# Stop the server
+stop_server.bat
+```
+
+The server will be available at `http://localhost:8000/monza/admin`
 
 ## API Documentation
 
 Once the server is running, you can access:
-- **Interactive API docs**: http://localhost:8000/docs
-- **Alternative API docs**: http://localhost:8000/redoc
+- **Interactive API docs**: http://localhost:8000/monza/admin/docs
+- **Alternative API docs**: http://localhost:8000/monza/admin/redoc
 
 ## Usage Examples
 
 ### Retrieve the XML file
 ```bash
-curl http://localhost:8000/xml
+curl http://localhost:8000/monza/admin/xml
 ```
 
 ### Replace the XML file
 ```bash
-curl -X POST http://localhost:8000/xml \
+curl -X POST http://localhost:8000/monza/admin/xml \
   -H "Content-Type: multipart/form-data" \
   -F "file=@your_new_file.xml"
 ```
 
 ### Restart Tomcat server
 ```bash
-curl -X POST http://35.208.212.1:8000/restart-tomcat
+curl -X POST http://35.208.212.1:8000/monza/admin/restart-tomcat
 ```
 
 ### Using Python requests
@@ -74,17 +87,17 @@ curl -X POST http://35.208.212.1:8000/restart-tomcat
 import requests
 
 # Get the XML file
-response = requests.get('http://localhost:8000/xml')
+response = requests.get('http://localhost:8000/monza/admin/xml')
 print(response.text)
 
 # Replace the XML file
 with open('new_data.xml', 'rb') as f:
     files = {'file': f}
-    response = requests.post('http://localhost:8000/xml', files=files)
+    response = requests.post('http://localhost:8000/monza/admin/xml', files=files)
     print(response.json())
 
 # Restart Tomcat server
-response = requests.post('http://35.208.212.1:8000/restart-tomcat')
+response = requests.post('http://35.208.212.1:8000/monza/admin/restart-tomcat')
 print(response.json())
 
 ## Configuration
@@ -108,9 +121,12 @@ monza_cube_designer/
 ├── config.json          # Configuration file
 ├── Monza.xml            # Sample XML file
 ├── requirements.txt      # Python dependencies
-├── start_server.sh      # Server start script
-├── stop_server.sh       # Server stop script
-├── check_server.sh      # Server status script
+├── start_server.sh      # Linux/macOS start script
+├── stop_server.sh       # Linux/macOS stop script
+├── check_server.sh      # Linux/macOS status script
+├── start_server.bat     # Windows start script
+├── stop_server.bat      # Windows stop script
+├── check_server.bat     # Windows status script
 └── README.md            # This file
 ```
 

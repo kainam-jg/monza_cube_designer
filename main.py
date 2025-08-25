@@ -24,14 +24,18 @@ def load_config():
 config = load_config()
 XML_FILE_PATH = config.get("xml_file_path", "./Monza.xml")
 
-app = FastAPI(title="XML File Server", description="A simple server to serve and replace XML files")
+app = FastAPI(
+    title="XML File Server", 
+    description="A simple server to serve and replace XML files",
+    root_path="/monza/admin"
+)
 
 @app.on_event("startup")
 async def startup_event():
     """Log configuration on startup"""
     print(f"XML File Server starting up...")
     print(f"XML file path: {XML_FILE_PATH}")
-    print(f"Server will be available at: http://localhost:8000")
+    print(f"Server will be available at: http://localhost:8000/monza/admin")
 
 @app.get("/xml", summary="Retrieve the XML file")
 async def get_xml():
@@ -132,11 +136,12 @@ async def root():
     """
     return {
         "message": "XML File Server",
+        "base_path": "/monza/admin",
         "endpoints": {
-            "GET /xml": "Retrieve the current XML file",
-            "POST /xml": "Replace the XML file (upload new XML file)",
-            "POST /restart-tomcat": "Restart Tomcat server",
-            "GET /": "This information page"
+            "GET /monza/admin/xml": "Retrieve the current XML file",
+            "POST /monza/admin/xml": "Replace the XML file (upload new XML file)",
+            "POST /monza/admin/restart-tomcat": "Restart Tomcat server",
+            "GET /monza/admin": "This information page"
         }
     }
 

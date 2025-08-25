@@ -1,4 +1,4 @@
 {
-    "xml_file_path": "/opt/tomcat/lib/Monza.xml",
+    "xml_file_path": "C:/cursor/tomcat11/apache-tomcat-11.0.9/lib/Monza.xml",
     "description": "Configuration for XML File Server"
 } 
