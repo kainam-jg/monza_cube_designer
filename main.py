@@ -4,6 +4,7 @@ import os
 import shutil
 import json
 import subprocess
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 # Load configuration
@@ -26,8 +27,7 @@ XML_FILE_PATH = config.get("xml_file_path", "./Monza.xml")
 
 app = FastAPI(
     title="XML File Server", 
-    description="A simple server to serve and replace XML files",
-    root_path="/monza/admin"
+    description="A simple server to serve and replace XML files"
 )
 
 @app.on_event("startup")
@@ -35,9 +35,9 @@ async def startup_event():
     """Log configuration on startup"""
     print(f"XML File Server starting up...")
     print(f"XML file path: {XML_FILE_PATH}")
-    print(f"Server will be available at: http://localhost:8000/monza/admin")
+    print(f"Server will be available at: http://localhost:8000")
 
-@app.get("/xml", summary="Retrieve the XML file")
+@app.get("/cubes/list", summary="Retrieve the XML file")
 async def get_xml():
     """
     Retrieve the current XML file.
@@ -129,6 +129,40 @@ async def restart_tomcat():
             detail=f"Error restarting Tomcat: {str(e)}"
         )
 
+@app.get("/cubes/enumerate", summary="Count cubes in XML file")
+async def enumerate_cubes():
+    """
+    Count the number of cubes defined in the Monza.xml file.
+    
+    Returns:
+        JSON with cube count and cube names
+    """
+    try:
+        if not os.path.exists(XML_FILE_PATH):
+            raise HTTPException(status_code=404, detail="XML file not found")
+        
+        # Parse the XML file
+        tree = ET.parse(XML_FILE_PATH)
+        root = tree.getroot()
+        
+        # Find all Cube elements
+        cubes = root.findall('.//Cube')
+        
+        # Get cube names
+        cube_names = [cube.get('name', 'Unnamed Cube') for cube in cubes]
+        
+        return {
+            "message": f"Found {len(cubes)} cube(s) in Monza.xml",
+            "count": len(cubes),
+            "cubes": cube_names,
+            "file_path": XML_FILE_PATH
+        }
+        
+    except ET.ParseError as e:
+        raise HTTPException(status_code=500, detail=f"Error parsing XML file: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error counting cubes: {str(e)}")
+
 @app.get("/", summary="API Information")
 async def root():
     """
@@ -136,12 +170,13 @@ async def root():
     """
     return {
         "message": "XML File Server",
-        "base_path": "/monza/admin",
+        "base_path": "/",
         "endpoints": {
-            "GET /monza/admin/xml": "Retrieve the current XML file",
-            "POST /monza/admin/xml": "Replace the XML file (upload new XML file)",
-            "POST /monza/admin/restart-tomcat": "Restart Tomcat server",
-            "GET /monza/admin": "This information page"
+            "GET /cubes/list": "Retrieve the current XML file",
+            "GET /cubes/enumerate": "Count cubes in XML file",
+            "POST /xml": "Replace the XML file (upload new XML file)",
+            "POST /restart-tomcat": "Restart Tomcat server",
+            "GET /": "This information page"
         }
     }
 
