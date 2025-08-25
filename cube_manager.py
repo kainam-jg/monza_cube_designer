@@ -7,15 +7,28 @@ from pathlib import Path
 
 
 # Pydantic models for cube creation
+class Level(BaseModel):
+    name: str = Field(..., description="Level name")
+    column: str = Field(..., description="Level column name")
+    type: str = Field(default="String", description="Level type")
+    uniqueMembers: Optional[bool] = Field(default=None, description="Whether members are unique")
+
+class Hierarchy(BaseModel):
+    name: Optional[str] = Field(default=None, description="Hierarchy name")
+    hasAll: bool = Field(default=True, description="Whether hierarchy has 'All' member")
+    allMemberName: Optional[str] = Field(default=None, description="Name of the 'All' member")
+    levels: List[Level] = Field(..., min_items=1, description="List of levels in the hierarchy")
+
 class Dimension(BaseModel):
     name: str = Field(..., description="Dimension name")
-    column: str = Field(..., description="Dimension column name")
     type: str = Field(default="StandardDimension", description="Dimension type")
+    hierarchies: List[Hierarchy] = Field(..., min_items=1, description="List of hierarchies")
 
 class Measure(BaseModel):
     name: str = Field(..., description="Measure name")
     column: str = Field(..., description="Measure column name")
     aggregator: str = Field(default="sum", description="Measure aggregator")
+    formatString: Optional[str] = Field(default=None, description="Format string for the measure")
 
 class CreateCubeRequest(BaseModel):
     cube_name: str = Field(..., description="Name of the cube")
@@ -123,16 +136,25 @@ class CubeManager:
             dimension_elem.set("name", dim.name)
             dimension_elem.set("type", dim.type)
             
-            # Create hierarchy for the dimension
-            hierarchy_elem = ET.SubElement(dimension_elem, "Hierarchy")
-            hierarchy_elem.set("name", dim.name)
-            hierarchy_elem.set("hasAll", "true")
-            
-            # Create level for the hierarchy
-            level_elem = ET.SubElement(hierarchy_elem, "Level")
-            level_elem.set("name", dim.name)
-            level_elem.set("column", dim.column)
-            level_elem.set("type", "String")
+            # Create hierarchies for the dimension
+            for hierarchy in dim.hierarchies:
+                hierarchy_elem = ET.SubElement(dimension_elem, "Hierarchy")
+                
+                # Set hierarchy attributes
+                if hierarchy.name:
+                    hierarchy_elem.set("name", hierarchy.name)
+                hierarchy_elem.set("hasAll", str(hierarchy.hasAll).lower())
+                if hierarchy.allMemberName:
+                    hierarchy_elem.set("allMemberName", hierarchy.allMemberName)
+                
+                # Create levels for the hierarchy
+                for level in hierarchy.levels:
+                    level_elem = ET.SubElement(hierarchy_elem, "Level")
+                    level_elem.set("name", level.name)
+                    level_elem.set("column", level.column)
+                    level_elem.set("type", level.type)
+                    if level.uniqueMembers is not None:
+                        level_elem.set("uniqueMembers", str(level.uniqueMembers).lower())
         
         # Create measures
         for measure in cube_request.measures:
@@ -140,6 +162,8 @@ class CubeManager:
             measure_elem.set("name", measure.name)
             measure_elem.set("column", measure.column)
             measure_elem.set("aggregator", measure.aggregator)
+            if measure.formatString:
+                measure_elem.set("formatString", measure.formatString)
         
         # Move the new cube to the end (after all existing cubes)
         if existing_cubes:
