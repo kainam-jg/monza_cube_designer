@@ -21,7 +21,6 @@ class Hierarchy(BaseModel):
 
 class Dimension(BaseModel):
     name: str = Field(..., description="Dimension name")
-    type: str = Field(default="StandardDimension", description="Dimension type")
     hierarchies: List[Hierarchy] = Field(..., min_items=1, description="List of hierarchies")
 
 class Measure(BaseModel):
@@ -134,7 +133,6 @@ class CubeManager:
         for dim in cube_request.dimensions:
             dimension_elem = ET.SubElement(cube_elem, "Dimension")
             dimension_elem.set("name", dim.name)
-            dimension_elem.set("type", dim.type)
             
             # Create hierarchies for the dimension
             for hierarchy in dim.hierarchies:
