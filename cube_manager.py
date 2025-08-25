@@ -42,6 +42,25 @@ class CubeManager:
     def __init__(self, xml_file_path: str):
         self.xml_file_path = xml_file_path
     
+    def _format_xml(self, root):
+        """Format XML with proper indentation and line breaks"""
+        def indent(elem, level=0):
+            i = "\n" + level*"  "
+            if len(elem):
+                if not elem.text or not elem.text.strip():
+                    elem.text = i + "  "
+                if not elem.tail or not elem.tail.strip():
+                    elem.tail = i
+                for subelem in elem:
+                    indent(subelem, level+1)
+                if not elem.tail or not elem.tail.strip():
+                    elem.tail = i
+            else:
+                if level and (not elem.tail or not elem.tail.strip()):
+                    elem.tail = i
+        
+        indent(root)
+    
     def _validate_file_exists(self):
         """Validate that the XML file exists"""
         if not os.path.exists(self.xml_file_path):
@@ -167,12 +186,12 @@ class CubeManager:
         if existing_cubes:
             # Remove the cube from its current position
             schema.remove(cube_elem)
-            # Insert it after the last existing cube
-            last_cube = existing_cubes[-1]
-            schema.insert(schema.index(last_cube) + 1, cube_elem)
+            # Insert it at the end (after all existing cubes)
+            schema.append(cube_elem)
         
-        # Write the updated XML back to file
+        # Write the updated XML back to file with proper formatting
         try:
+            self._format_xml(root)
             tree.write(self.xml_file_path, encoding='utf-8', xml_declaration=True)
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error writing XML file: {str(e)}")
@@ -205,8 +224,9 @@ class CubeManager:
         # Remove the cube element
         cube.getparent().remove(cube)
         
-        # Write the updated XML back to file
+        # Write the updated XML back to file with proper formatting
         try:
+            self._format_xml(root)
             tree.write(self.xml_file_path, encoding='utf-8', xml_declaration=True)
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error writing XML file: {str(e)}")
