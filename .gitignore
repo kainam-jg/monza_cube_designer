@@ -136,4 +136,7 @@ dmypy.json
 
 # OS
 .DS_Store
-Thumbs.db 
+Thumbs.db
+
+# Windows batch files
+*.bat 
