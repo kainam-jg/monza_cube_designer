@@ -26,10 +26,8 @@ python main.py
 
 ### Option 2: Using uvicorn directly
 ```bash
-uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+uvicorn main:app --host 0.0.0.0 --port 8000
 ```
-
-**Note**: The `--reload` flag enables automatic server restart when code changes are detected.
 
 ### Option 3: Using the management scripts (Recommended)
 

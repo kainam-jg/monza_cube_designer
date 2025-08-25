@@ -4,8 +4,7 @@ import os
 import shutil
 import json
 import subprocess
-import xml.etree.ElementTree as ET
-from pathlib import Path
+from cube_manager import CubeManager, CreateCubeRequest
 
 # Load configuration
 def load_config():
@@ -24,6 +23,9 @@ def load_config():
 # Load configuration on startup
 config = load_config()
 XML_FILE_PATH = config.get("xml_file_path", "./Monza.xml")
+
+# Initialize cube manager
+cube_manager = CubeManager(XML_FILE_PATH)
 
 app = FastAPI(
     title="XML File Server", 
@@ -137,31 +139,60 @@ async def enumerate_cubes():
     Returns:
         JSON with cube count and cube names
     """
-    try:
-        if not os.path.exists(XML_FILE_PATH):
-            raise HTTPException(status_code=404, detail="XML file not found")
+    return cube_manager.enumerate_cubes()
+
+@app.get("/cubes/{cube_name}", summary="Get cube by name")
+async def get_cube_by_name(cube_name: str):
+    """
+    Get a specific cube by name from the Monza.xml file.
+    
+    Args:
+        cube_name: The name of the cube to retrieve
         
-        # Parse the XML file
-        tree = ET.parse(XML_FILE_PATH)
-        root = tree.getroot()
+    Returns:
+        The complete cube XML element
+    """
+    return cube_manager.get_cube_by_name(cube_name)
+
+@app.post("/cubes/create", summary="Create a new cube")
+async def create_cube(cube_request: CreateCubeRequest):
+    """
+    Create a new cube in the Monza.xml file.
+    
+    Args:
+        cube_request: JSON object containing cube definition
         
-        # Find all Cube elements
-        cubes = root.findall('.//Cube')
+    Returns:
+        Success message with cube details
+    """
+    return cube_manager.create_cube(cube_request)
+
+@app.delete("/cubes/{cube_name}", summary="Delete a cube")
+async def delete_cube(cube_name: str):
+    """
+    Delete a cube from the Monza.xml file.
+    
+    Args:
+        cube_name: The name of the cube to delete
         
-        # Get cube names
-        cube_names = [cube.get('name', 'Unnamed Cube') for cube in cubes]
+    Returns:
+        Success message
+    """
+    return cube_manager.delete_cube(cube_name)
+
+@app.put("/cubes/{cube_name}", summary="Update a cube")
+async def update_cube(cube_name: str, cube_request: CreateCubeRequest):
+    """
+    Update an existing cube in the Monza.xml file.
+    
+    Args:
+        cube_name: The name of the cube to update
+        cube_request: JSON object containing new cube definition
         
-        return {
-            "message": f"Found {len(cubes)} cube(s) in Monza.xml",
-            "count": len(cubes),
-            "cubes": cube_names,
-            "file_path": XML_FILE_PATH
-        }
-        
-    except ET.ParseError as e:
-        raise HTTPException(status_code=500, detail=f"Error parsing XML file: {str(e)}")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error counting cubes: {str(e)}")
+    Returns:
+        Success message with cube details
+    """
+    return cube_manager.update_cube(cube_name, cube_request)
 
 @app.get("/", summary="API Information")
 async def root():
@@ -174,6 +205,10 @@ async def root():
         "endpoints": {
             "GET /cubes/list": "Retrieve the current XML file",
             "GET /cubes/enumerate": "Count cubes in XML file",
+            "GET /cubes/{cube_name}": "Get specific cube by name",
+            "POST /cubes/create": "Create a new cube",
+            "DELETE /cubes/{cube_name}": "Delete a cube",
+            "PUT /cubes/{cube_name}": "Update a cube",
             "POST /xml": "Replace the XML file (upload new XML file)",
             "POST /restart-tomcat": "Restart Tomcat server",
             "GET /": "This information page"

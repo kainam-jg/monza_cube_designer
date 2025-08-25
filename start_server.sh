@@ -29,8 +29,8 @@ mkdir -p logs
 # Activate virtual environment
 source /opt/tomcat/.venv/bin/activate
 
-# Start the server with nohup and auto-reload
-nohup uvicorn main:app --host 0.0.0.0 --port 8000 --reload > "logs/$LOG_FILE" 2>&1 &
+# Start the server with nohup
+nohup uvicorn main:app --host 0.0.0.0 --port 8000 > "logs/$LOG_FILE" 2>&1 &
 
 # Save the PID
 echo $! > "$PID_FILE"
