@@ -139,4 +139,10 @@ dmypy.json
 Thumbs.db
 
 # Windows batch files
-*.bat 
+*.bat
+
+# Linux/Unix shell scripts
+*.sh
+
+# Configuration files (may contain sensitive paths)
+config.json 

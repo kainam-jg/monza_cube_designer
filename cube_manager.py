@@ -221,8 +221,16 @@ class CubeManager:
                 detail=f"Cube '{cube_name}' not found. Available cubes: {', '.join(available_cubes)}"
             )
         
-        # Remove the cube element
-        cube.getparent().remove(cube)
+        # Remove the cube element by finding its parent
+        schema = root.find('.//Schema')
+        if schema is None:
+            schema = root
+        
+        # Find and remove the cube from the schema
+        for cube_elem in schema.findall('Cube'):
+            if cube_elem.get('name') == cube_name:
+                schema.remove(cube_elem)
+                break
         
         # Write the updated XML back to file with proper formatting
         try:
