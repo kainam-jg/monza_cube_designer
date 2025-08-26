@@ -7,21 +7,24 @@ A FastAPI server for managing Mondrian OLAP XML schemas with comprehensive cube 
 ### Core Functionality
 - **XML File Management**: Serve and manage Mondrian OLAP XML schema files
 - **Cube Operations**: Full CRUD operations for OLAP cubes
-- **Tomcat Integration**: Restart Tomcat server remotely
+- **Application Management**: Restart application remotely
 - **Configuration Management**: Load XML file path from `config.json`
 - **Cross-Platform Support**: Management scripts for both Linux/macOS and Windows
 
-### Cube Management Endpoints
-- **GET /monza/admin/cubes/list**: Retrieve the complete XML schema
-- **GET /monza/admin/cubes/enumerate**: Count and list all cubes in the schema
-- **GET /monza/admin/cubes/{cube_name}**: Get a specific cube by name
-- **POST /monza/admin/cubes/create**: Create a new cube with JSON input
-- **PUT /monza/admin/cubes/{cube_name}**: Update an existing cube
-- **DELETE /monza/admin/cubes/{cube_name}**: Delete a cube from the schema
+### API Organization
+The API is organized into logical groups:
 
-### System Management
-- **POST /monza/admin/restart-tomcat**: Restart Tomcat server (Linux)
-- **GET /monza/admin**: API information and available endpoints
+#### Application-Level Endpoints (entire XML file operations)
+- **GET /application/list**: Retrieve the complete XML schema
+- **GET /application/enumerate**: Count and list all cubes in the schema
+- **POST /application/replace**: Replace the XML file with a new upload
+- **POST /application/restart**: Restart the application
+
+#### Cube-Level Endpoints (individual cube operations)
+- **GET /cubes/{cube_name}**: Get a specific cube by name
+- **POST /cubes/create**: Create a new cube with JSON input
+- **PUT /cubes/{cube_name}**: Update an existing cube
+- **DELETE /cubes/{cube_name}**: Delete a cube from the schema
 
 ## Installation
 
@@ -39,8 +42,7 @@ pip install -r requirements.txt
 3. Configure the XML file path in `config.json`:
 ```json
 {
-    "xml_file_path": "C:/cursor/tomcat11/apache-tomcat-11.0.9/lib/Monza.xml",
-    "description": "Configuration for XML File Server"
+    "xml_file_path": "C:/cursor/tomcat11/apache-tomcat-11.0.9/lib/Monza.xml"
 }
 ```
 
@@ -82,21 +84,22 @@ check_server.bat
 stop_server.bat
 ```
 
-The server will be available at `http://localhost:8000/monza/admin`
+The server will be available at `http://localhost:8000`
 
 ## API Documentation
 
 Once the server is running, you can access:
-- **Interactive API docs**: http://localhost:8000/monza/admin/docs
-- **Alternative API docs**: http://localhost:8000/monza/admin/redoc
+- **Interactive API docs**: http://localhost:8000/docs
+- **Alternative API docs**: http://localhost:8000/redoc
+- **API Information**: http://localhost:8000/ (root endpoint)
 
 ## API Endpoints
 
-### Cube Management
+### Application-Level Operations
 
 #### List All Cubes
 ```bash
-curl http://localhost:8000/monza/admin/cubes/enumerate
+curl http://localhost:8000/application/enumerate
 ```
 **Response:**
 ```json
@@ -108,9 +111,28 @@ curl http://localhost:8000/monza/admin/cubes/enumerate
 }
 ```
 
+#### Retrieve XML File
+```bash
+curl http://localhost:8000/application/list
+```
+**Response:** Returns the complete XML file as a download
+
+#### Replace XML File
+```bash
+curl -X POST http://localhost:8000/application/replace \
+  -F "file=@new_schema.xml"
+```
+
+#### Restart Application
+```bash
+curl -X POST http://localhost:8000/application/restart
+```
+
+### Cube-Level Operations
+
 #### Get Specific Cube
 ```bash
-curl http://localhost:8000/monza/admin/cubes/Vehicle%20Sales
+curl http://localhost:8000/cubes/Vehicle%20Sales
 ```
 **Response:**
 ```json
@@ -124,7 +146,7 @@ curl http://localhost:8000/monza/admin/cubes/Vehicle%20Sales
 
 #### Create New Cube
 ```bash
-curl -X POST http://localhost:8000/monza/admin/cubes/create \
+curl -X POST http://localhost:8000/cubes/create \
   -H "Content-Type: application/json" \
   -d '{
     "cube_name": "Sales Analytics",
@@ -167,7 +189,7 @@ curl -X POST http://localhost:8000/monza/admin/cubes/create \
 
 #### Update Cube
 ```bash
-curl -X PUT http://localhost:8000/monza/admin/cubes/Vehicle%20Sales \
+curl -X PUT http://localhost:8000/cubes/Vehicle%20Sales \
   -H "Content-Type: application/json" \
   -d '{
     "cube_name": "Vehicle Sales Updated",
@@ -179,14 +201,7 @@ curl -X PUT http://localhost:8000/monza/admin/cubes/Vehicle%20Sales \
 
 #### Delete Cube
 ```bash
-curl -X DELETE http://localhost:8000/monza/admin/cubes/Vehicle%20Sales
-```
-
-### System Management
-
-#### Restart Tomcat Server
-```bash
-curl -X POST http://35.208.212.1:8000/monza/admin/restart-tomcat
+curl -X DELETE http://localhost:8000/cubes/Vehicle%20Sales
 ```
 
 ## Cube Schema Structure
@@ -254,27 +269,33 @@ The API supports creating complex Mondrian OLAP cubes with the following structu
 monza_cube_designer/
 ├── main.py              # FastAPI application with endpoints
 ├── cube_manager.py      # Core cube management logic
-├── config.json          # Configuration file
+├── config.json          # Configuration file (gitignored)
 ├── requirements.txt     # Python dependencies
-├── start_server.sh      # Linux/macOS start script
-├── stop_server.sh       # Linux/macOS stop script
-├── check_server.sh      # Linux/macOS status script
-├── start_server.bat     # Windows start script
-├── stop_server.bat      # Windows stop script
-├── check_server.bat     # Windows status script
+├── start_server.sh      # Linux/macOS start script (gitignored)
+├── stop_server.sh       # Linux/macOS stop script (gitignored)
+├── check_server.sh      # Linux/macOS status script (gitignored)
+├── start_server.bat     # Windows start script (gitignored)
+├── stop_server.bat      # Windows stop script (gitignored)
+├── check_server.bat     # Windows status script (gitignored)
 ├── samples/             # Sample XML files for reference
+├── .gitignore          # Git ignore rules
 └── README.md           # This file
 ```
 
 ## Configuration
 
-### config.json
+### config.json (gitignored)
 ```json
 {
-    "xml_file_path": "C:/cursor/tomcat11/apache-tomcat-11.0.9/lib/Monza.xml",
-    "description": "Configuration for XML File Server"
+    "xml_file_path": "C:/cursor/tomcat11/apache-tomcat-11.0.9/lib/Monza.xml"
 }
 ```
+
+### .gitignore Configuration
+The following files are excluded from version control:
+- **`*.sh`**: Linux/Unix shell scripts
+- **`*.bat`**: Windows batch files  
+- **`config.json`**: Configuration file (may contain sensitive paths)
 
 ### Environment Setup
 - **Virtual Environment**: Scripts automatically activate `/opt/tomcat/.venv` (Linux) or `/opt/tomcat/.venv/Scripts/activate.bat` (Windows)
@@ -298,6 +319,7 @@ All errors include detailed messages and suggestions for resolution.
 - **Modularity**: Cube management logic is separated for maintainability
 - **Cross-Platform**: Full support for both Linux and Windows environments
 - **Production Ready**: Includes proper logging, error handling, and process management
+- **Logical Organization**: Endpoints are organized by scope (application vs cube level)
 
 ## Dependencies
 
