@@ -18,6 +18,7 @@ The API is organized into logical groups:
 - **GET /application/list**: Retrieve the complete XML schema
 - **GET /application/enumerate**: Count and list all cubes in the schema
 - **POST /application/replace**: Replace the XML file with a new upload
+- **GET /application/status**: Check application status
 - **POST /application/restart**: Restart the application
 
 #### Cube-Level Endpoints (individual cube operations)
@@ -121,6 +122,20 @@ curl http://localhost:8000/application/list
 ```bash
 curl -X POST http://localhost:8000/application/replace \
   -F "file=@new_schema.xml"
+```
+
+#### Check Application Status
+```bash
+curl http://localhost:8000/application/status
+```
+**Response:**
+```json
+{
+    "message": "Tomcat service status retrieved successfully",
+    "status": "success",
+    "stdout": "● tomcat.service - Apache Tomcat...",
+    "timestamp": "status check completed"
+}
 ```
 
 #### Restart Application

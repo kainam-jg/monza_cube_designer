@@ -131,6 +131,57 @@ async def restart_tomcat():
             detail=f"Error restarting Tomcat: {str(e)}"
         )
 
+@app.get("/application/status", summary="Check Application Status")
+async def check_tomcat_status():
+    """
+    Check the status of the Tomcat server using systemctl.
+    
+    Returns:
+        Tomcat service status information
+    """
+    try:
+        # Execute the systemctl status command
+        result = subprocess.run(
+            ["sudo", "systemctl", "status", "tomcat"],
+            capture_output=True,
+            text=True,
+            timeout=10  # 10 second timeout for status check
+        )
+        
+        if result.returncode == 0:
+            return {
+                "message": "Tomcat service status retrieved successfully",
+                "status": "success",
+                "stdout": result.stdout.strip() if result.stdout else "",
+                "timestamp": "status check completed"
+            }
+        else:
+            # systemctl status returns non-zero for inactive services, but we still want to show the output
+            return {
+                "message": "Tomcat service status retrieved",
+                "status": "service_inactive",
+                "stdout": result.stdout.strip() if result.stdout else "",
+                "stderr": result.stderr.strip() if result.stderr else "",
+                "return_code": result.returncode,
+                "timestamp": "status check completed"
+            }
+    
+    except subprocess.TimeoutExpired:
+        raise HTTPException(
+            status_code=500,
+            detail="Tomcat status check timed out after 10 seconds"
+        )
+    except FileNotFoundError:
+        raise HTTPException(
+            status_code=500,
+            detail="systemctl command not found or sudo not available"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error checking Tomcat status: {str(e)}"
+        )
+
 @app.get("/application/enumerate", summary="Count cubes in XML file")
 async def enumerate_cubes():
     """
@@ -215,6 +266,7 @@ async def root():
                 "PUT /cubes/{cube_name}": "Update a cube"
             },
             "System": {
+                "GET /application/status": "Check Application Status",
                 "POST /application/restart": "Restart Application",
                 "GET /": "This information page"
             }
