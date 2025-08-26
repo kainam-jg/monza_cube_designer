@@ -39,7 +39,7 @@ async def startup_event():
     print(f"XML file path: {XML_FILE_PATH}")
     print(f"Server will be available at: http://localhost:8000")
 
-@app.get("/cubes/list", summary="Retrieve the XML file")
+@app.get("/application/list", summary="Retrieve the XML file")
 async def get_xml():
     """
     Retrieve the current XML file.
@@ -56,7 +56,7 @@ async def get_xml():
         filename="Monza.xml"
     )
 
-@app.post("/xml", summary="Replace the XML file")
+@app.post("/application/replace", summary="Replace the XML file")
 async def replace_xml(file: UploadFile = File(...)):
     """
     Replace the current XML file with a new one.
@@ -85,7 +85,7 @@ async def replace_xml(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error saving file: {str(e)}")
 
-@app.post("/restart-tomcat", summary="Restart Tomcat Server")
+@app.post("/application/restart", summary="Restart Application")
 async def restart_tomcat():
     """
     Restart the Tomcat server using systemctl.
@@ -131,7 +131,7 @@ async def restart_tomcat():
             detail=f"Error restarting Tomcat: {str(e)}"
         )
 
-@app.get("/cubes/enumerate", summary="Count cubes in XML file")
+@app.get("/application/enumerate", summary="Count cubes in XML file")
 async def enumerate_cubes():
     """
     Count the number of cubes defined in the Monza.xml file.
@@ -203,15 +203,21 @@ async def root():
         "message": "XML File Server",
         "base_path": "/",
         "endpoints": {
-            "GET /cubes/list": "Retrieve the current XML file",
-            "GET /cubes/enumerate": "Count cubes in XML file",
-            "GET /cubes/{cube_name}": "Get specific cube by name",
-            "POST /cubes/create": "Create a new cube",
-            "DELETE /cubes/{cube_name}": "Delete a cube",
-            "PUT /cubes/{cube_name}": "Update a cube",
-            "POST /xml": "Replace the XML file (upload new XML file)",
-            "POST /restart-tomcat": "Restart Tomcat server",
-            "GET /": "This information page"
+            "Application Level (entire XML file)": {
+                "GET /application/list": "Retrieve the current XML file",
+                "GET /application/enumerate": "Count cubes in XML file",
+                "POST /application/replace": "Replace the XML file (upload new XML file)"
+            },
+            "Cube Level (individual cubes)": {
+                "GET /cubes/{cube_name}": "Get specific cube by name",
+                "POST /cubes/create": "Create a new cube",
+                "DELETE /cubes/{cube_name}": "Delete a cube",
+                "PUT /cubes/{cube_name}": "Update a cube"
+            },
+            "System": {
+                "POST /application/restart": "Restart Application",
+                "GET /": "This information page"
+            }
         }
     }
 
