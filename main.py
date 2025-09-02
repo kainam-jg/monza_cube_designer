@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware
 import os
 import shutil
 import json
@@ -30,6 +31,15 @@ cube_manager = CubeManager(XML_FILE_PATH)
 app = FastAPI(
     title="XML File Server", 
     description="A simple server to serve and replace XML files"
+)
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
 )
 
 @app.on_event("startup")
