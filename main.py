@@ -6,6 +6,7 @@ import shutil
 import json
 import subprocess
 from cube_manager import CubeManager, CreateCubeRequest
+from database import db_manager
 
 # Load configuration
 def load_config():
@@ -255,6 +256,98 @@ async def update_cube(cube_name: str, cube_request: CreateCubeRequest):
     """
     return cube_manager.update_cube(cube_name, cube_request)
 
+@app.get("/database/tables/{schema_name}", summary="List tables with _k in name")
+async def list_tables_with_k(schema_name: str):
+    """
+    List all tables in the specified schema that contain '_k' in their name.
+    
+    Args:
+        schema_name: The name of the database schema to search
+        
+    Returns:
+        JSON with list of tables containing '_k' in their names
+    """
+    try:
+        # Get ClickHouse client
+        client = db_manager.get_client()
+        if not client:
+            raise HTTPException(status_code=500, detail="Database connection failed")
+        
+        # Query to find tables with '_k' in the name
+        query = f"""
+        SELECT name as table_name
+        FROM system.tables 
+        WHERE database = '{schema_name}' 
+        AND name LIKE '%_k%'
+        ORDER BY name
+        """
+        
+        result = client.query(query)
+        
+        # Extract table names from result
+        tables = [row[0] for row in result.result_rows] if result.result_rows else []
+        
+        return {
+            "status": "success",
+            "schema": schema_name,
+            "tables_found": len(tables),
+            "tables": tables,
+            "query": query.strip()
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Error querying tables: {str(e)}"
+        )
+
+@app.get("/database/columns/{schema_name}/{table_name}", summary="Get table columns and data types")
+async def get_table_columns(schema_name: str, table_name: str):
+    """
+    Get all columns and their data types for a specific table.
+    
+    Args:
+        schema_name: The name of the database schema
+        table_name: The name of the table to inspect
+        
+    Returns:
+        JSON with column information including names and data types
+    """
+    try:
+        # Get ClickHouse client
+        client = db_manager.get_client()
+        if not client:
+            raise HTTPException(status_code=500, detail="Database connection failed")
+        
+        # Use ClickHouse DESCRIBE function
+        query = f"DESCRIBE {schema_name}.{table_name}"
+        
+        result = client.query(query)
+        
+        # Extract column information from result
+        columns = []
+        if result.result_rows:
+            for row in result.result_rows:
+                columns.append({
+                    "column_name": row[0],
+                    "data_type": row[1]
+                })
+        
+        return {
+            "status": "success",
+            "schema": schema_name,
+            "table": table_name,
+            "columns_found": len(columns),
+            "columns": columns,
+            "query": query.strip()
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Error querying table columns: {str(e)}"
+        )
+
 @app.get("/", summary="API Information")
 async def root():
     """
@@ -274,6 +367,10 @@ async def root():
                 "POST /cubes/create": "Create a new cube",
                 "DELETE /cubes/{cube_name}": "Delete a cube",
                 "PUT /cubes/{cube_name}": "Update a cube"
+            },
+            "Database": {
+                "GET /database/tables/{schema_name}": "List tables with _k in name from specified schema",
+                "GET /database/columns/{schema_name}/{table_name}": "Get table columns and data types"
             },
             "System": {
                 "GET /application/status": "Check Application Status",

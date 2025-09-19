@@ -1,4 +1,12 @@
 {
     "xml_file_path": "C:/cursor/tomcat11/apache-tomcat-11.0.9/lib/Monza.xml",
-    "description": "Configuration for XML File Server"
+    "description": "Configuration for XML File Server",
+    "database": {
+        "host": "3.135.214.254",
+        "port": 8123,
+        "username": "default",
+        "password": "Kainam2023",
+        "database": "default",
+        "secure": false
+    }
 } 
