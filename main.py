@@ -348,6 +348,63 @@ async def get_table_columns(schema_name: str, table_name: str):
             detail=f"Error querying table columns: {str(e)}"
         )
 
+@app.get("/database/column-stats/{schema_name}/{table_name}/{column_name}", summary="Get column statistics")
+async def get_column_stats(schema_name: str, table_name: str, column_name: str):
+    """
+    Get column statistics including total row count, distinct values, and null values.
+    
+    Args:
+        schema_name: The name of the database schema
+        table_name: The name of the table to inspect
+        column_name: The name of the column to analyze
+        
+    Returns:
+        JSON with column statistics including total rows, distinct values, and null values
+    """
+    try:
+        # Get ClickHouse client
+        client = db_manager.get_client()
+        if not client:
+            raise HTTPException(status_code=500, detail="Database connection failed")
+        
+        # Query to get total row count, distinct values, and null values
+        query = f"""
+        SELECT 
+            COUNT(*) as total_rows,
+            COUNT(DISTINCT {column_name}) as distinct_values,
+            COUNT(*) - COUNT({column_name}) as null_values
+        FROM {schema_name}.{table_name}
+        """
+        
+        result = client.query(query)
+        
+        if result.result_rows:
+            row = result.result_rows[0]
+            total_rows = row[0]
+            distinct_values = row[1]
+            null_values = row[2]
+            
+            return {
+                "status": "success",
+                "schema": schema_name,
+                "table": table_name,
+                "column": column_name,
+                "statistics": {
+                    "total_rows": total_rows,
+                    "distinct_values": distinct_values,
+                    "null_values": null_values
+                },
+                "query": query.strip()
+            }
+        else:
+            raise HTTPException(status_code=404, detail="No data returned from query")
+            
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Error querying column statistics: {str(e)}"
+        )
+
 @app.get("/", summary="API Information")
 async def root():
     """
@@ -370,7 +427,8 @@ async def root():
             },
             "Database": {
                 "GET /database/tables/{schema_name}": "List tables with _k in name from specified schema",
-                "GET /database/columns/{schema_name}/{table_name}": "Get table columns and data types"
+                "GET /database/columns/{schema_name}/{table_name}": "Get table columns and data types",
+                "GET /database/column-stats/{schema_name}/{table_name}/{column_name}": "Get column statistics (row count, distinct values, null values)"
             },
             "System": {
                 "GET /application/status": "Check Application Status",

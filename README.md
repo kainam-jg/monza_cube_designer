@@ -32,6 +32,7 @@ The API is organized into logical groups:
 #### Database-Level Endpoints (ClickHouse database operations)
 - **GET /database/tables/{schema_name}**: List all tables with '_k' in their names
 - **GET /database/columns/{schema_name}/{table_name}**: Get table columns and data types
+- **GET /database/column-stats/{schema_name}/{table_name}/{column_name}**: Get column statistics (row count, distinct values, null values)
 
 ## Installation
 
@@ -282,6 +283,46 @@ curl http://localhost:8000/database/columns/default/foodmart_k
         }
     ],
     "query": "DESCRIBE default.foodmart_k"
+}
+```
+
+#### Get Column Statistics
+```bash
+curl http://localhost:8000/database/column-stats/default/foodmart_k/calendar_year
+```
+**Response:**
+```json
+{
+    "status": "success",
+    "schema": "default",
+    "table": "foodmart_k",
+    "column": "calendar_year",
+    "statistics": {
+        "total_rows": 7282,
+        "distinct_values": 1,
+        "null_values": 0
+    },
+    "query": "SELECT COUNT(*) as total_rows, COUNT(DISTINCT calendar_year) as distinct_values, COUNT(*) - COUNT(calendar_year) as null_values FROM default.foodmart_k"
+}
+```
+
+**Example with Date Column:**
+```bash
+curl http://localhost:8000/database/column-stats/default/foodmart_k/calendar_date
+```
+**Response:**
+```json
+{
+    "status": "success",
+    "schema": "default",
+    "table": "foodmart_k",
+    "column": "calendar_date",
+    "statistics": {
+        "total_rows": 7282,
+        "distinct_values": 306,
+        "null_values": 0
+    },
+    "query": "SELECT COUNT(*) as total_rows, COUNT(DISTINCT calendar_date) as distinct_values, COUNT(*) - COUNT(calendar_date) as null_values FROM default.foodmart_k"
 }
 ```
 
